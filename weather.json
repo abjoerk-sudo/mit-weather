@@ -2,10 +2,10 @@
   "station": {
     "id": "SER_B",
     "name": "SER_B Weather Station",
-    "source": "GEUS / PROMICE Dataverse",
+    "source": "GEUS Dataverse fallback",
     "source_url": "https://dataverse.geus.dk/api/access/datafile/120056"
   },
-  "generated_at": "2026-11-13T12:35:47.110919+00:00",
+  "generated_at": "2026-11-13T13:35:35.395878+00:00",
   "latest": {
     "time": "2026-11-07T00:00:00+00:00",
     "temperature": null,
