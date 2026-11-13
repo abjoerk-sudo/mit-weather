@@ -6,14 +6,13 @@ import pandas as pd
 import requests
 
 
-# GEUS Dataverse dataset
-DATASET_API = (
-    "https://dataverse.geus.dk/api/datasets/:persistentId/"
-    "?persistentId=doi:10.22008/FK2/IW73UU"
+CSV_URL = (
+    "https://thredds.geus.dk/thredds/fileServer/"
+    "aws/l3sites/csv/hour/SER_B_hour.csv"
 )
 
 OUTFILE = Path(__file__).with_name("weather.json")
-CSVFILE = Path(__file__).with_name("MIT_B_hour.csv")
+CSVFILE = Path(__file__).with_name("SER_B_hour.csv")
 
 HISTORY_HOURS = 7 * 24
 
@@ -28,53 +27,19 @@ def first_existing(columns, candidates):
 def clean_value(value):
     if pd.isna(value):
         return None
-
     try:
         return float(value)
     except Exception:
         return None
 
 
-def find_mit_b_hour_file():
-    print("Finding current MIT_B_hour.csv in GEUS Dataverse...")
+def main():
+
+    print("Downloading SER_B_hour.csv from GEUS THREDDS...")
 
     response = requests.get(
-        DATASET_API,
-        timeout=120
-    )
-
-    response.raise_for_status()
-
-    metadata = response.json()
-
-    files = metadata["data"]["latestVersion"]["files"]
-
-    for item in files:
-        data_file = item.get("dataFile", {})
-
-        if data_file.get("filename") == "MIT_B_hour.csv":
-            file_id = data_file["id"]
-
-            print("Found MIT_B_hour.csv")
-            print(f"Dataverse file ID: {file_id}")
-
-            return file_id
-
-    raise RuntimeError(
-        "Could not find MIT_B_hour.csv in the current GEUS Dataverse dataset."
-    )
-
-
-def download_file(file_id):
-    download_url = (
-        f"https://dataverse.geus.dk/api/access/datafile/{file_id}"
-    )
-
-    print("Downloading MIT_B_hour.csv...")
-
-    response = requests.get(
-        download_url,
-        timeout=300,
+        CSV_URL,
+        timeout=600,
         allow_redirects=True
     )
 
@@ -86,15 +51,6 @@ def download_file(file_id):
         f"Download completed: "
         f"{len(response.content) / 1024 / 1024:.2f} MB"
     )
-
-    return download_url
-
-
-def main():
-
-    file_id = find_mit_b_hour_file()
-
-    download_url = download_file(file_id)
 
     print("Reading CSV...")
 
@@ -213,7 +169,7 @@ def main():
 
     if len(df) == 0:
         raise RuntimeError(
-            "The downloaded MIT_B file contains no valid observations."
+            "SER_B_hour.csv contains no valid observations."
         )
 
     latest = df.iloc[-1]
@@ -223,10 +179,10 @@ def main():
     payload = {
 
         "station": {
-            "id": "MIT_B",
-            "name": "MIT_B Weather Station",
-            "source": "GEUS / PROMICE Dataverse",
-            "source_url": download_url
+            "id": "SER_B",
+            "name": "SER_B Weather Station",
+            "source": "GEUS THREDDS",
+            "source_url": CSV_URL
         },
 
         "generated_at":
@@ -287,7 +243,7 @@ def main():
 
     print("")
     print("SUCCESS")
-    print("Station: MIT_B")
+    print("Station: SER_B")
     print(f"Latest observation: {payload['latest']['time']}")
     print(
         f"Weather history written: "
