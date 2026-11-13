@@ -1,107 +1,143 @@
-#!/usr/bin/env python3
 import json
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
-import requests
+import xarray as xr
 
-# Current GEUS THREDDS hourly Level-3 CSV for MIT_B.
-CSV_URL = "https://thredds.geus.dk/thredds/fileServer/aws/l3sites/csv/hour/MIT_B_hour.csv"
+DATA_URL = "https://thredds.geus.dk/thredds/dodsC/aws/l3sites/netcdf/hour/MIT_B_hour.nc"
 
 OUTFILE = Path(__file__).with_name("weather.json")
 HISTORY_HOURS = 7 * 24
 
-def first_existing(columns, candidates):
+
+def first_existing(ds, candidates):
     for name in candidates:
-        if name in columns:
+        if name in ds.variables:
             return name
     return None
 
-def clean_value(value):
-    if pd.isna(value):
-        return None
-    if hasattr(value, "item"):
-        value = value.item()
+
+def safe_value(value):
     try:
+        value = np.asarray(value).squeeze()
+        if np.size(value) != 1:
+            return None
+        value = value.item()
+        if pd.isna(value):
+            return None
         return float(value)
-    except (TypeError, ValueError):
-        return value
+    except Exception:
+        return None
+
 
 def main():
-    response = requests.get(CSV_URL, timeout=300)
-    response.raise_for_status()
+    print("Opening GEUS MIT_B OPeNDAP dataset...")
 
-    tmp = Path(__file__).with_name("MIT_B_hour.csv")
-    tmp.write_bytes(response.content)
+    ds = xr.open_dataset(
+        DATA_URL,
+        engine="netcdf4",
+        decode_times=True
+    )
 
-    df = pd.read_csv(tmp)
+    print("Dataset opened successfully.")
 
-    # PROMICE/GEUS files normally use 'time', but this also tolerates common alternatives.
-    time_col = first_existing(df.columns, ["time", "timestamp", "datetime", "date"])
-    if not time_col:
-        raise RuntimeError(f"No time column found. Columns are: {list(df.columns)}")
+    time_name = first_existing(ds, ["time", "timestamp", "datetime"])
+    if time_name is None:
+        raise RuntimeError(
+            f"Could not find time variable. Available variables: {list(ds.variables)}"
+        )
 
-    df[time_col] = pd.to_datetime(df[time_col], utc=True, errors="coerce")
-    df = df.dropna(subset=[time_col]).sort_values(time_col)
-
-    # Prefer processed upper-boom hourly variables.
     mapping = {
-        "temperature": first_existing(df.columns, ["t_u", "t_i", "air_temperature"]),
-        "humidity": first_existing(df.columns, ["rh_u", "rh_i", "relative_humidity"]),
-        "wind_speed": first_existing(df.columns, ["wspd_u", "wspd_i", "wind_speed"]),
-        "wind_direction": first_existing(df.columns, ["wdir_u", "wdir_i", "wind_direction"]),
-        "pressure": first_existing(df.columns, ["p_u", "p_i", "air_pressure"]),
-        "shortwave_down": first_existing(df.columns, ["dsr"]),
-        "shortwave_up": first_existing(df.columns, ["usr"]),
-        "longwave_down": first_existing(df.columns, ["dlr"]),
-        "longwave_up": first_existing(df.columns, ["ulr"]),
-        "surface_temperature": first_existing(df.columns, ["t_surf"]),
-        "snow_height": first_existing(df.columns, ["snow_height"]),
-        "battery_voltage": first_existing(df.columns, ["batt_v"]),
+        "temperature": first_existing(ds, ["t_u", "t_i", "air_temperature"]),
+        "humidity": first_existing(ds, ["rh_u", "rh_i", "relative_humidity"]),
+        "wind_speed": first_existing(ds, ["wspd_u", "wspd_i", "wind_speed"]),
+        "wind_direction": first_existing(ds, ["wdir_u", "wdir_i", "wind_direction"]),
+        "pressure": first_existing(ds, ["p_u", "p_i", "air_pressure"]),
+        "shortwave_down": first_existing(ds, ["dsr"]),
+        "shortwave_up": first_existing(ds, ["usr"]),
+        "longwave_down": first_existing(ds, ["dlr"]),
+        "longwave_up": first_existing(ds, ["ulr"]),
+        "surface_temperature": first_existing(ds, ["t_surf"]),
+        "snow_height": first_existing(ds, ["snow_height"]),
+        "battery_voltage": first_existing(ds, ["batt_v"]),
     }
 
-    # Use the latest row containing at least temperature or wind data if possible.
-    preferred = [c for c in [mapping["temperature"], mapping["wind_speed"]] if c]
-    if preferred:
-        valid = df.dropna(subset=preferred, how="all")
-        latest = valid.iloc[-1] if not valid.empty else df.iloc[-1]
-    else:
-        latest = df.iloc[-1]
+    print("Detected variables:")
+    for key, value in mapping.items():
+        print(f"  {key}: {value}")
 
-    hist = df.tail(HISTORY_HOURS).copy()
+    times = pd.to_datetime(ds[time_name].values, utc=True)
+
+    if len(times) == 0:
+        raise RuntimeError("Dataset contains no timestamps.")
+
+    latest_index = len(times) - 1
+    start_index = max(0, len(times) - HISTORY_HOURS)
+
+    latest = {
+        "time": times[latest_index].isoformat()
+    }
+
+    for output_name, variable_name in mapping.items():
+        if variable_name is None:
+            latest[output_name] = None
+        else:
+            latest[output_name] = safe_value(
+                ds[variable_name].isel({time_name: latest_index}).values
+            )
+
+    history = []
+
+    for i in range(start_index, len(times)):
+        row = {
+            "time": times[i].isoformat()
+        }
+
+        for output_name in [
+            "temperature",
+            "humidity",
+            "wind_speed",
+            "pressure",
+            "shortwave_down",
+            "surface_temperature",
+            "snow_height"
+        ]:
+            variable_name = mapping[output_name]
+
+            if variable_name is None:
+                row[output_name] = None
+            else:
+                row[output_name] = safe_value(
+                    ds[variable_name].isel({time_name: i}).values
+                )
+
+        history.append(row)
 
     payload = {
         "station": {
             "id": "MIT_B",
             "name": "MIT_B Weather Station",
-            "latitude": 65.70607,
-            "longitude": -37.81144,
-            "elevation_m": 520,
             "source": "GEUS / PROMICE",
-            "source_url": CSV_URL
+            "source_url": DATA_URL
         },
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "latest": {
-            "time": latest[time_col].isoformat(),
-        },
-        "history": []
+        "latest": latest,
+        "history": history
     }
 
-    for out_name, col in mapping.items():
-        payload["latest"][out_name] = clean_value(latest[col]) if col else None
+    OUTFILE.write_text(
+        json.dumps(payload, indent=2),
+        encoding="utf-8"
+    )
 
-    for _, row in hist.iterrows():
-        item = {"time": row[time_col].isoformat()}
-        for out_name in ["temperature", "humidity", "wind_speed", "pressure",
-                         "shortwave_down", "surface_temperature", "snow_height"]:
-            col = mapping[out_name]
-            item[out_name] = clean_value(row[col]) if col else None
-        payload["history"].append(item)
+    print(f"Wrote {OUTFILE}")
+    print(f"Latest observation: {latest['time']}")
+    print(f"History records: {len(history)}")
 
-    OUTFILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"Wrote {OUTFILE} with {len(payload['history'])} hourly records.")
-    print("Detected columns:", mapping)
+    ds.close()
+
 
 if __name__ == "__main__":
     main()
