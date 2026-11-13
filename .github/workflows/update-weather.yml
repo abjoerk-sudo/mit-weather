@@ -1,0 +1,33 @@
+name: Update MIT_B weather data
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch latest GEUS data
+        run: python fetch_weather.py
+
+      - name: Commit updated JSON
+        run: |
+          git config user.name "weather-bot"
+          git config user.email "weather-bot@users.noreply.github.com"
+          git add weather.json
+          git diff --cached --quiet || git commit -m "Update MIT_B weather data"
+          git push
