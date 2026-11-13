@@ -6,9 +6,14 @@ import pandas as pd
 import requests
 
 
-CSV_URL = (
+THREDDS_URL = (
     "https://thredds.geus.dk/thredds/fileServer/"
     "aws/l3sites/csv/hour/SER_B_hour.csv"
+)
+
+DATASET_API = (
+    "https://dataverse.geus.dk/api/datasets/:persistentId/"
+    "?persistentId=doi:10.22008/FK2/IW73UU"
 )
 
 OUTFILE = Path(__file__).with_name("weather.json")
@@ -27,19 +32,19 @@ def first_existing(columns, candidates):
 def clean_value(value):
     if pd.isna(value):
         return None
+
     try:
         return float(value)
     except Exception:
         return None
 
 
-def main():
-
-    print("Downloading SER_B_hour.csv from GEUS THREDDS...")
+def download_from_thredds():
+    print("Trying GEUS THREDDS...")
 
     response = requests.get(
-        CSV_URL,
-        timeout=600,
+        THREDDS_URL,
+        timeout=120,
         allow_redirects=True
     )
 
@@ -48,11 +53,92 @@ def main():
     CSVFILE.write_bytes(response.content)
 
     print(
-        f"Download completed: "
+        f"THREDDS download successful: "
         f"{len(response.content) / 1024 / 1024:.2f} MB"
     )
 
-    print("Reading CSV...")
+    return {
+        "source": "GEUS THREDDS",
+        "source_url": THREDDS_URL
+    }
+
+
+def find_dataverse_file():
+    print("Finding current SER_B_hour.csv in GEUS Dataverse...")
+
+    response = requests.get(
+        DATASET_API,
+        timeout=120
+    )
+
+    response.raise_for_status()
+
+    metadata = response.json()
+
+    files = metadata["data"]["latestVersion"]["files"]
+
+    for item in files:
+        data_file = item.get("dataFile", {})
+
+        if data_file.get("filename") == "SER_B_hour.csv":
+            return data_file["id"]
+
+    raise RuntimeError(
+        "Could not find SER_B_hour.csv in GEUS Dataverse."
+    )
+
+
+def download_from_dataverse():
+    print("Trying GEUS Dataverse fallback...")
+
+    file_id = find_dataverse_file()
+
+    download_url = (
+        f"https://dataverse.geus.dk/api/access/datafile/{file_id}"
+    )
+
+    response = requests.get(
+        download_url,
+        timeout=300,
+        allow_redirects=True
+    )
+
+    response.raise_for_status()
+
+    CSVFILE.write_bytes(response.content)
+
+    print(
+        f"Dataverse download successful: "
+        f"{len(response.content) / 1024 / 1024:.2f} MB"
+    )
+
+    return {
+        "source": "GEUS Dataverse fallback",
+        "source_url": download_url
+    }
+
+
+def download_data():
+    try:
+        return download_from_thredds()
+
+    except Exception as error:
+        print("")
+        print("THREDDS failed.")
+        print(f"Reason: {error}")
+        print("")
+        print("Switching automatically to Dataverse...")
+        print("")
+
+        return download_from_dataverse()
+
+
+def main():
+
+    source_info = download_data()
+
+    print("")
+    print("Reading SER_B CSV...")
 
     df = pd.read_csv(CSVFILE)
 
@@ -85,6 +171,11 @@ def main():
         .dropna(subset=[time_col])
         .sort_values(time_col)
     )
+
+    if len(df) == 0:
+        raise RuntimeError(
+            "SER_B file contains no valid observations."
+        )
 
     mapping = {
 
@@ -167,11 +258,6 @@ def main():
     for key, value in mapping.items():
         print(f"{key}: {value}")
 
-    if len(df) == 0:
-        raise RuntimeError(
-            "SER_B_hour.csv contains no valid observations."
-        )
-
     latest = df.iloc[-1]
 
     history_df = df.tail(HISTORY_HOURS)
@@ -181,8 +267,8 @@ def main():
         "station": {
             "id": "SER_B",
             "name": "SER_B Weather Station",
-            "source": "GEUS THREDDS",
-            "source_url": CSV_URL
+            "source": source_info["source"],
+            "source_url": source_info["source_url"]
         },
 
         "generated_at":
@@ -244,6 +330,7 @@ def main():
     print("")
     print("SUCCESS")
     print("Station: SER_B")
+    print(f"Data source used: {source_info['source']}")
     print(f"Latest observation: {payload['latest']['time']}")
     print(
         f"Weather history written: "
