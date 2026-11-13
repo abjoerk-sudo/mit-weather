@@ -29,7 +29,7 @@ def clean_value(value):
         return value
 
 def main():
-    response = requests.get(CSV_URL, timeout=60)
+    response = requests.get(CSV_URL, timeout=300)
     response.raise_for_status()
 
     tmp = Path(__file__).with_name("MIT_B_hour.csv")
