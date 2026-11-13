@@ -1,0 +1,20 @@
+{
+  "station": {
+    "id": "MIT_B",
+    "name": "MIT_B Weather Station",
+    "latitude": 65.70607,
+    "longitude": -37.81144,
+    "elevation_m": 520,
+    "source": "GEUS / PROMICE"
+  },
+  "generated_at": "2026-11-12T21:00:00+00:00",
+  "latest": {
+    "time": "2026-11-12T20:00:00+00:00",
+    "temperature": null,
+    "humidity": null,
+    "wind_speed": null,
+    "wind_direction": null,
+    "pressure": null
+  },
+  "history": []
+}
