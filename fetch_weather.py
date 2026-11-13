@@ -13,7 +13,7 @@ DATASET_API = (
 )
 
 OUTFILE = Path(__file__).with_name("weather.json")
-CSVFILE = Path(__file__).with_name("SER_B_hour.csv")
+CSVFILE = Path(__file__).with_name("MIT_B_hour.csv")
 
 HISTORY_HOURS = 7 * 24
 
@@ -35,8 +35,8 @@ def clean_value(value):
         return None
 
 
-def find_ser_b_hour_file():
-    print("Finding current SER_B_hour.csv in GEUS Dataverse...")
+def find_mit_b_hour_file():
+    print("Finding current MIT_B_hour.csv in GEUS Dataverse...")
 
     response = requests.get(
         DATASET_API,
@@ -52,16 +52,16 @@ def find_ser_b_hour_file():
     for item in files:
         data_file = item.get("dataFile", {})
 
-        if data_file.get("filename") == "SER_B_hour.csv":
+        if data_file.get("filename") == "MIT_B_hour.csv":
             file_id = data_file["id"]
 
-            print(f"Found SER_B_hour.csv")
+            print("Found MIT_B_hour.csv")
             print(f"Dataverse file ID: {file_id}")
 
             return file_id
 
     raise RuntimeError(
-        "Could not find SER_B_hour.csv in the current GEUS Dataverse dataset."
+        "Could not find MIT_B_hour.csv in the current GEUS Dataverse dataset."
     )
 
 
@@ -70,7 +70,7 @@ def download_file(file_id):
         f"https://dataverse.geus.dk/api/access/datafile/{file_id}"
     )
 
-    print("Downloading SER_B_hour.csv...")
+    print("Downloading MIT_B_hour.csv...")
 
     response = requests.get(
         download_url,
@@ -92,7 +92,7 @@ def download_file(file_id):
 
 def main():
 
-    file_id = find_ser_b_hour_file()
+    file_id = find_mit_b_hour_file()
 
     download_url = download_file(file_id)
 
@@ -213,7 +213,7 @@ def main():
 
     if len(df) == 0:
         raise RuntimeError(
-            "The downloaded SER_B file contains no valid observations."
+            "The downloaded MIT_B file contains no valid observations."
         )
 
     latest = df.iloc[-1]
@@ -223,8 +223,8 @@ def main():
     payload = {
 
         "station": {
-            "id": "SER_B",
-            "name": "SER_B Weather Station",
+            "id": "MIT_B",
+            "name": "MIT_B Weather Station",
             "source": "GEUS / PROMICE Dataverse",
             "source_url": download_url
         },
@@ -287,7 +287,7 @@ def main():
 
     print("")
     print("SUCCESS")
-    print(f"Station: SER_B")
+    print("Station: MIT_B")
     print(f"Latest observation: {payload['latest']['time']}")
     print(
         f"Weather history written: "
