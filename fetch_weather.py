@@ -7,7 +7,7 @@ import pandas as pd
 import requests
 
 # Current GEUS THREDDS hourly Level-3 CSV for MIT_B.
-CSV_URL = "https://www.thredds.geus.dk/thredds/fileServer/aws/l3sites/csv/hour/MIT_B_hour.csv"
+CSV_URL = "https://thredds.geus.dk/thredds/fileServer/aws/l3sites/csv/hour/MIT_B_hour.csv"
 
 OUTFILE = Path(__file__).with_name("weather.json")
 HISTORY_HOURS = 7 * 24
