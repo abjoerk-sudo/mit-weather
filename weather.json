@@ -5,9 +5,9 @@
     "source": "GEUS THREDDS",
     "source_url": "https://thredds.geus.dk/thredds/fileServer/aws/l3sites/csv/hour/SER_B_hour.csv"
   },
-  "generated_at": "2026-11-18T13:49:03.646126+00:00",
+  "generated_at": "2026-11-18T21:50:19.996597+00:00",
   "latest": {
-    "time": "2026-11-18T11:00:00+00:00",
+    "time": "2026-11-18T19:00:00+00:00",
     "temperature": null,
     "humidity": null,
     "wind_speed": null,
@@ -19,89 +19,9 @@
     "longwave_up": null,
     "surface_temperature": null,
     "snow_height": null,
-    "battery_voltage": 13.46
+    "battery_voltage": 13.43
   },
   "history": [
-    {
-      "time": "2026-11-11T12:00:00+00:00",
-      "temperature": -0.117,
-      "humidity": 63.63,
-      "wind_speed": null,
-      "pressure": 1019.0,
-      "shortwave_down": 27.8706,
-      "surface_temperature": -0.7202,
-      "snow_height": null
-    },
-    {
-      "time": "2026-11-11T13:00:00+00:00",
-      "temperature": -0.617,
-      "humidity": 70.58,
-      "wind_speed": 5.018,
-      "pressure": 1019.0,
-      "shortwave_down": 11.3916,
-      "surface_temperature": -1.0018,
-      "snow_height": null
-    },
-    {
-      "time": "2026-11-11T14:00:00+00:00",
-      "temperature": -1.883,
-      "humidity": 82.4,
-      "wind_speed": 5.758,
-      "pressure": 1019.0,
-      "shortwave_down": 7.2492,
-      "surface_temperature": -1.608,
-      "snow_height": null
-    },
-    {
-      "time": "2026-11-11T15:00:00+00:00",
-      "temperature": -1.717,
-      "humidity": 82.7,
-      "wind_speed": 5.503,
-      "pressure": 1019.0,
-      "shortwave_down": 0.4401,
-      "surface_temperature": -1.6888,
-      "snow_height": null
-    },
-    {
-      "time": "2026-11-11T16:00:00+00:00",
-      "temperature": -1.7,
-      "humidity": 83.5,
-      "wind_speed": 6.25,
-      "pressure": 1019.0,
-      "shortwave_down": 0.0,
-      "surface_temperature": -1.6847,
-      "snow_height": null
-    },
-    {
-      "time": "2026-11-11T17:00:00+00:00",
-      "temperature": -1.467,
-      "humidity": 81.7,
-      "wind_speed": 5.94,
-      "pressure": 1018.0,
-      "shortwave_down": 0.0,
-      "surface_temperature": -1.6199,
-      "snow_height": null
-    },
-    {
-      "time": "2026-11-11T18:00:00+00:00",
-      "temperature": -1.2,
-      "humidity": 78.88,
-      "wind_speed": 5.584,
-      "pressure": 1018.0,
-      "shortwave_down": 0.0,
-      "surface_temperature": -1.5727,
-      "snow_height": null
-    },
-    {
-      "time": "2026-11-11T19:00:00+00:00",
-      "temperature": -1.217,
-      "humidity": 79.1,
-      "wind_speed": null,
-      "pressure": 1018.0,
-      "shortwave_down": 0.0,
-      "surface_temperature": -1.6453,
-      "snow_height": null
-    },
     {
       "time": "2026-11-11T20:00:00+00:00",
       "temperature": -1.133,
@@ -1694,6 +1614,86 @@
     },
     {
       "time": "2026-11-18T11:00:00+00:00",
+      "temperature": -3.117,
+      "humidity": 74.38,
+      "wind_speed": 0.995,
+      "pressure": 1002.0,
+      "shortwave_down": 20.3883,
+      "surface_temperature": -5.0689,
+      "snow_height": null
+    },
+    {
+      "time": "2026-11-18T12:00:00+00:00",
+      "temperature": -3.233,
+      "humidity": 73.45,
+      "wind_speed": null,
+      "pressure": 1002.0,
+      "shortwave_down": null,
+      "surface_temperature": -4.9626,
+      "snow_height": null
+    },
+    {
+      "time": "2026-11-18T13:00:00+00:00",
+      "temperature": -3.117,
+      "humidity": 74.88,
+      "wind_speed": 0.943,
+      "pressure": 1002.0,
+      "shortwave_down": 21.2362,
+      "surface_temperature": -4.3081,
+      "snow_height": null
+    },
+    {
+      "time": "2026-11-18T14:00:00+00:00",
+      "temperature": -3.2,
+      "humidity": 74.5,
+      "wind_speed": 3.512,
+      "pressure": 1002.0,
+      "shortwave_down": 7.3269,
+      "surface_temperature": -4.0168,
+      "snow_height": null
+    },
+    {
+      "time": "2026-11-18T15:00:00+00:00",
+      "temperature": -3.333,
+      "humidity": 77.38,
+      "wind_speed": 3.639,
+      "pressure": 1002.0,
+      "shortwave_down": 0.0,
+      "surface_temperature": -4.0211,
+      "snow_height": null
+    },
+    {
+      "time": "2026-11-18T16:00:00+00:00",
+      "temperature": -3.433,
+      "humidity": 80.9,
+      "wind_speed": 3.824,
+      "pressure": 1002.0,
+      "shortwave_down": 0.0,
+      "surface_temperature": -3.8816,
+      "snow_height": null
+    },
+    {
+      "time": "2026-11-18T17:00:00+00:00",
+      "temperature": -3.183,
+      "humidity": 80.6,
+      "wind_speed": 3.13,
+      "pressure": 1003.0,
+      "shortwave_down": null,
+      "surface_temperature": -3.6145,
+      "snow_height": null
+    },
+    {
+      "time": "2026-11-18T18:00:00+00:00",
+      "temperature": -3.417,
+      "humidity": 84.5,
+      "wind_speed": null,
+      "pressure": 1003.0,
+      "shortwave_down": 0.0,
+      "surface_temperature": -3.7153,
+      "snow_height": null
+    },
+    {
+      "time": "2026-11-18T19:00:00+00:00",
       "temperature": null,
       "humidity": null,
       "wind_speed": null,
